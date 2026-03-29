@@ -1,3 +1,56 @@
+@import "task-groups.css";
+
+:root {
+	--color-white: #FFFFFF;
+	--color-black: #000000;
+	--color-lightblue: #80d5f9;
+	--color-blue: #0079BF;
+	--color-darkblue: #0067A3;
+	--color-transparent: transparent;
+}
+
+.body {
+	background-color: var(--color-blue);
+	color: var(--color-white);
+	font-size: 18px;
+	height: 100vh;
+	display: grid;
+	grid-template-rows: auto 1fr max-content;
+}
+
+.main {
+	padding-top: 20px;
+	overflow: auto;
+}
+
+.container,
+#content {
+	height: 100%;
+	overflow: hidden;
+}
+
 #app-login-btn {
 	width: 160px;
+}
+
+.footer {
+	position: fixed;
+	bottom: 0;
+	height: 55px;
+	width: 100%;
+	padding: 17px 19px 17px 21px;
+	background-color: var(--color-darkblue);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tasks-counter {
+	display: flex;
+	gap: 30px;
+}
+
+.author-link {
+	font-style: italic;
+	color: var(--color-lightblue);
 }

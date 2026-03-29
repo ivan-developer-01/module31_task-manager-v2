@@ -11,7 +11,7 @@ export const appState = new State();
 
 const loginForm = document.querySelector("#app-login-form");
 
-generateTestUser(User);
+if (!localStorage.getItem("users")) generateTestUser(User);
 
 loginForm.addEventListener("submit", function (e) {
 	e.preventDefault();
@@ -25,3 +25,5 @@ loginForm.addEventListener("submit", function (e) {
 
 	document.querySelector("#content").innerHTML = fieldHTMLContent;
 });
+
+// todo use event delegation, not .addEventListener() to dozens of elements

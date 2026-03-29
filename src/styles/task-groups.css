@@ -1,0 +1,74 @@
+:root {
+	--color-gray-1: #EBECF0;
+	--color-gray-2: #DEDEDE;
+	--color-gray-3: #CDCDCD;
+	--color-gray-4: #5E6C84;
+}
+
+.task-groups {
+	display: flex;
+	justify-content: space-between;
+	gap: 20px;
+	height: calc(100% - 95px);
+}
+
+.task-group {
+	min-height: 197px;
+	height: fit-content;
+	max-height: 100%;
+	background-color: var(--color-gray-1);
+	color: var(--color-black);
+	padding: 12px 12px 8px;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	width: 100%;
+	border-radius: 10px;
+	overflow: auto;
+}
+
+.task-group-title {
+	font-size: 18px;
+	font-weight: 500;
+	margin: 0;
+}
+
+.task-list {
+	margin-top: 15px;
+	list-style: none;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.task {
+	background-color: var(--color-white);
+	border-radius: 10px;
+	padding: 7px 9px 7px 8px;
+	cursor: pointer;
+}
+
+.task:hover {
+	background-color: var(--color-gray-2);
+}
+
+.task:active {
+	background-color: var(--color-gray-3);
+}
+
+.task-add-button {
+	background-color: var(--color-transparent);
+	color: var(--color-gray-4);
+	border: none;
+	width: fit-content;
+	padding: 6px 6px 7px 5px;
+	border-radius: 5px;
+}
+
+.task-add-button:hover {
+	background-color: var(--color-white);
+}
+
+.task-add-button:active {
+	background-color: var(--color-gray-3);
+}
