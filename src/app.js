@@ -14,14 +14,14 @@ const loginForm = document.querySelector("#app-login-form");
 generateTestUser(User);
 
 loginForm.addEventListener("submit", function (e) {
-  e.preventDefault();
-  const formData = new FormData(loginForm);
-  const login = formData.get("login");
-  const password = formData.get("password");
+	e.preventDefault();
+	const formData = new FormData(loginForm);
+	const login = formData.get("login");
+	const password = formData.get("password");
 
-  let fieldHTMLContent = authUser(login, password)
-    ? taskFieldTemplate
-    : noAccessTemplate;
+	let fieldHTMLContent = authUser(login, password)
+		? taskFieldTemplate
+		: noAccessTemplate;
 
-  document.querySelector("#content").innerHTML = fieldHTMLContent;
+	document.querySelector("#content").innerHTML = fieldHTMLContent;
 });
