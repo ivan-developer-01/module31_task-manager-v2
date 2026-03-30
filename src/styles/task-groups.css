@@ -41,11 +41,16 @@
 	gap: 15px;
 }
 
-.task {
+.task,
+.add-input-wrapper {
+	display: flex;
+	align-items: center;
 	background-color: var(--color-white);
 	border-radius: 10px;
 	padding: 7px 9px 7px 8px;
 	cursor: pointer;
+	min-height: 35px;
+	word-wrap: anywhere;
 }
 
 .task:hover {
@@ -65,10 +70,57 @@
 	border-radius: 5px;
 }
 
-.task-add-button:hover {
+.task-add-button:disabled {
+	pointer-events: none;
+	opacity: 0.5;
+}
+
+.task-add-button:not(:disabled):hover {
 	background-color: var(--color-white);
 }
 
-.task-add-button:active {
+.task-add-button:not(:disabled):active {
 	background-color: var(--color-gray-3);
+}
+
+.task-submit-button {
+	height: 29px;
+	width: 102px;
+	color: var(--color-white);
+	background-color: var(--color-blue);
+	border: none;
+	outline: none;
+	border-radius: 5px;
+}
+
+.task-submit-button:hover {
+	background-color: var(--color-darkblue);
+}
+
+.task-submit-button:active {
+	filter: grayscale(40%);
+}
+
+.add-input-wrapper {
+	padding-bottom: 7px;
+	margin-bottom: 12px;
+}
+
+.add-input {
+	width: 100%;
+	border: none;
+	border-bottom: 1px solid black;
+	outline: none;
+	cursor: text;
+}
+
+.card-select {
+	display: block;
+	width: 100%;
+	background-color: var(--color-white);
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	height: 35px;
+	padding: 8px 10px 6px 7px;
 }

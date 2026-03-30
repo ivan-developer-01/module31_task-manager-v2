@@ -1,4 +1,5 @@
 @import "task-groups.css";
+@import "utils.css";
 
 :root {
 	--color-white: #FFFFFF;

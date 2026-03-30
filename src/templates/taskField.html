@@ -1,34 +1,51 @@
 <div class="task-groups">
-	<div class="task-group" id="task-group-backlog">
+	<div class="task-group" data-group="backlog">
 		<h3 class="task-group-title">Backlog</h3>
 		<ul class="task-list">
 			<li class="task">Test something</li>
 			<li class="task">Test something another</li>
 		</ul>
-		<button class="task-add-button">&#xFF0B; Add card</button>
+		<div class="task-group-controls">
+			<div class="add-input-wrapper d-none">
+				<input type="text" class="add-input">
+			</div>
+			<button class="task-add-button" id="backlog-task-add-button">&#xFF0B; Add card</button>
+			<button class="task-submit-button d-none">Submit</button>
+		</div>
 	</div>
-	<div class="task-group" id="task-group-ready">
+	<div class="task-group" data-group="ready">
 		<h3 class="task-group-title">Ready</h3>
 		<ul class="task-list">
 			<li class="task">Ready task 1</li>
 			<li class="task">Ready task 2</li>
 		</ul>
-		<button class="task-add-button">&#xFF0B; Add card</button>
+		<div class="task-group-controls">
+			<select id="ready-task-select" class="card-select d-none">
+				<!-- Populated via JS -->
+			</select>
+			<button class="task-add-button">&#xFF0B; Add card</button>
+		</div>
 	</div>
-	<div class="task-group" id="task-group-in-progress">
+	<div class="task-group" data-group="in-progress">
 		<h3 class="task-group-title">In Progress</h3>
 		<ul class="task-list">
 			<li class="task">In progress task 1</li>
 			<li class="task">In progress task 2</li>
 			<li class="task">In progress task 3</li>
 		</ul>
-		<button class="task-add-button">&#xFF0B; Add card</button>
+		<div class="task-group-controls">
+			<select id="ready-task-select" class="card-select d-none"></select>
+			<button class="task-add-button">&#xFF0B; Add card</button>
+		</div>
 	</div>
-	<div class="task-group" id="task-group-finished">
+	<div class="task-group" data-group="finished">
 		<h3 class="task-group-title">Finished</h3>
 		<ul class="task-list">
 			<li class="task">Lone finished task</li>
 		</ul>
-		<button class="task-add-button">&#xFF0B; Add card</button>
+		<div class="task-group-controls">
+			<select id="ready-task-select" class="card-select d-none"></select>
+			<button class="task-add-button">&#xFF0B; Add card</button>
+		</div>
 	</div>
 </div>
