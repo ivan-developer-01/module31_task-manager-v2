@@ -4,6 +4,7 @@ const tasksCounterDiv = document.querySelector(".tasks-counter"),
 	activeTasksCounter = tasksCounterDiv.querySelector("#active-tasks-count"),
 	finishedTasksCounter = tasksCounterDiv.querySelector("#finished-tasks-count");
 
+/** Shows or hides the tasks counter depending on whether the user is logged in. */
 export function toggleTasksCounter() {
 	if (appState.currentUser) {
 		tasksCounterDiv.classList.remove("visibility-hidden");

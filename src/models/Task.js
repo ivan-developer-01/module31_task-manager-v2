@@ -29,12 +29,12 @@ export class Task extends BaseModel {
 		return getFromStorage(Task.storageKey);
 	}
 
-	static update(taskId, newProperties) {
+	static update(taskId, changedProperties) {
 		const taskIndex = appState.tasks.findIndex((task) => task.id === taskId);
 		appState.tasks[taskIndex] = {
 			...appState.tasks[taskIndex],
-			...newProperties,
+			...changedProperties,
 		};
-		replaceStorage(this.storageKey, appState.tasks);
+		replaceStorage(Task.storageKey, appState.tasks);
 	}
 }

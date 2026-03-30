@@ -2,12 +2,18 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/style.css";
 import taskFieldTemplate from "./templates/taskField.html";
 import noAccessTemplate from "./templates/noAccess.html";
+import profileSettingsTemplate from "./templates/profile-settings.html";
+import loggedOutTemplate from "./templates/header/loggedOut.html";
+import loggedInTemplate from "./templates/header/loggedIn.html";
+import swal from "sweetalert";
 import { User } from "./models/User";
 import { generateTestUser } from "./utils";
 import { State } from "./state";
 import { authUser } from "./services/auth";
 import { toggleTasksCounter, updateTasksCounter } from "./tasksCounter";
 import { Task } from "./models/Task";
+const headerRight = document.querySelector("#header-right");
+headerRight.innerHTML = loggedOutTemplate;
 export let backlogTasksDiv = null;
 export let backlogTasksUl = null;
 export let readyTasksDiv = null;
@@ -21,6 +27,7 @@ let addInputWrapper = null,
 	backlogAddButton = null,
 	backlogSubmitButton = null;
 const contentDiv = document.querySelector("#content");
+const originalContentDivHTML = contentDiv.innerHTML;
 // Map<destination, source>
 const taskCategoryRelationships = new Map([
 	["ready", "backlog"],
@@ -29,41 +36,112 @@ const taskCategoryRelationships = new Map([
 ]);
 
 export const appState = new State();
-window.appState = appState;
 
 const loginForm = document.querySelector("#app-login-form");
 
 if (!localStorage.getItem("users")) generateTestUser(User);
 
-loginForm.addEventListener("submit", function (e) {
-	e.preventDefault();
-	const formData = new FormData(loginForm);
-	const login = formData.get("login");
-	const password = formData.get("password");
-	const isAuthenticated = authUser(login, password);
+function queryElements() {
+	backlogTasksDiv = contentDiv.querySelector("[data-group=backlog]");
+	backlogTasksUl = backlogTasksDiv.querySelector(".task-list");
+	readyTasksDiv = contentDiv.querySelector("[data-group=ready]");
+	readyTasksUl = readyTasksDiv.querySelector(".task-list");
+	inProgressTasksDiv = contentDiv.querySelector("[data-group=in-progress]");
+	inProgressTasksUl = inProgressTasksDiv.querySelector(".task-list");
+	finishedTasksDiv = contentDiv.querySelector("[data-group=finished]");
+	finishedTasksUl = finishedTasksDiv.querySelector(".task-list");
 
-	let fieldHTMLContent = isAuthenticated ? taskFieldTemplate : noAccessTemplate;
+	backlogAddButton = backlogTasksDiv.querySelector(".task-add-button");
+	backlogSubmitButton = backlogTasksDiv.querySelector(".task-submit-button");
+	addInputWrapper = contentDiv.querySelector(".add-input-wrapper");
+	addInput = addInputWrapper.querySelector(".add-input");
+}
 
-	contentDiv.innerHTML = fieldHTMLContent;
+document.addEventListener("submit", function (event) {
+	if (event.target.matches("#app-login-form")) {
+		event.preventDefault();
+		const formData = new FormData(event.target);
+		const login = formData.get("login");
+		const password = formData.get("password");
+		const isAuthenticated = authUser(login, password);
 
-	if (isAuthenticated) {
-		toggleTasksCounter();
-		appState.tasks = Task.getTasks();
-		backlogTasksDiv = contentDiv.querySelector("[data-group=backlog]");
-		backlogTasksUl = backlogTasksDiv.querySelector(".task-list");
-		readyTasksDiv = contentDiv.querySelector("[data-group=ready]");
-		readyTasksUl = readyTasksDiv.querySelector(".task-list");
-		inProgressTasksDiv = contentDiv.querySelector("[data-group=in-progress]");
-		inProgressTasksUl = inProgressTasksDiv.querySelector(".task-list");
-		finishedTasksDiv = contentDiv.querySelector("[data-group=finished]");
-		finishedTasksUl = finishedTasksDiv.querySelector(".task-list");
+		let fieldHTMLContent = isAuthenticated
+			? taskFieldTemplate
+			: noAccessTemplate;
 
-		backlogAddButton = backlogTasksDiv.querySelector(".task-add-button");
-		backlogSubmitButton = backlogTasksDiv.querySelector(".task-submit-button");
-		addInputWrapper = contentDiv.querySelector(".add-input-wrapper");
-		addInput = addInputWrapper.querySelector(".add-input");
-		renderTasks(appState.tasks);
-		updateTasksCounter();
+		contentDiv.innerHTML = fieldHTMLContent;
+
+		if (isAuthenticated) {
+			headerRight.innerHTML = loggedInTemplate;
+			toggleTasksCounter();
+			appState.tasks = Task.getTasks();
+			queryElements();
+			renderTasks(appState.tasks);
+			updateTasksCounter();
+		}
+	} else if (event.target.matches("#profile-edit-form")) {
+		event.preventDefault();
+		const formData = new FormData(event.target);
+		let isValid = true;
+
+		const {
+			login: loginInput,
+			"current-password": currentPasswordInput,
+			"new-password": newPasswordInput,
+			"confirm-new-password": confirmNewPasswordInput,
+		} = event.target.elements;
+		const [login, currentPassword, newPassword, newPasswordConfirmation] =
+			formData.values();
+		if (login === appState.currentUser.login && !newPassword) {
+			swal("You have not changed anything; aborting.");
+			return;
+		}
+
+		function invalidate(input, message) {
+			isValid = false;
+			input.setCustomValidity(message);
+		}
+
+		if (!login) {
+			invalidate(loginInput, "The login must not be empty.");
+		}
+		if (newPassword) {
+			if (!currentPassword) {
+				invalidate(
+					currentPasswordInput,
+					"You must confirm your current password to change it.",
+				);
+			} else if (currentPassword !== appState.currentUser.password) {
+				invalidate(
+					currentPasswordInput,
+					"The provided password does not match your password.",
+				);
+			} else if (!newPasswordConfirmation) {
+				invalidate(
+					confirmNewPasswordInput,
+					"You must confirm your new password.",
+				);
+			} else if (newPassword !== newPasswordConfirmation) {
+				invalidate(confirmNewPasswordInput, "Both passwords should match.");
+			}
+		}
+
+		if (isValid) {
+			// It seems we are finally good to go (phew, that was a lot of validation).
+			const changedProperties = [];
+			if (login !== appState.currentUser.login) {
+				appState.currentUser.login = login;
+				changedProperties.push("login");
+			}
+			if (newPassword) {
+				appState.currentUser.password = newPassword;
+				changedProperties.push("password");
+			}
+			User.update(appState.currentUser.id, appState.currentUser);
+			swal(`Successfully changed your ${changedProperties.join(" and ")}`).then(
+				() => renderTaskFieldTemplate(),
+			);
+		}
 	}
 });
 
@@ -96,7 +174,7 @@ document.body.addEventListener("click", (event) => {
 		addInput.focus();
 		backlogAddButton.classList.add("d-none");
 		backlogSubmitButton.classList.remove("d-none");
-	} else if (event.target.classList.contains("task-add-button")) {
+	} else if (event.target.matches(".task-add-button")) {
 		// Populate the select with valid options
 		const sourceCategory = taskCategoryRelationships.get(
 			event.target.closest(".task-group").dataset.group,
@@ -129,6 +207,48 @@ document.body.addEventListener("click", (event) => {
 	) {
 		handleTaskSubmit(addInput);
 	}
+
+	let userMenu = headerRight.querySelector(".user-menu"),
+		userContextmenu = userMenu?.querySelector(".user-contextmenu");
+	if (
+		event.target.closest(".user-menu") &&
+		!event.target.closest(".user-contextmenu")
+	) {
+		userMenu.classList.toggle("active");
+		userContextmenu.classList.toggle("d-none");
+	} else {
+		userMenu?.classList.remove("active");
+		userContextmenu?.classList.add("d-none");
+		if (event.target.matches(".contextmenu-item")) {
+			const { action } = event.target.dataset;
+			switch (action) {
+				case "tasks":
+					renderTaskFieldTemplate();
+					break;
+				case "profile":
+					contentDiv.innerHTML = profileSettingsTemplate;
+					const loginInput = contentDiv.querySelector("#login-input");
+					loginInput.value = appState.currentUser.login;
+					break;
+				case "logout":
+					appState.currentUser = null;
+					headerRight.innerHTML = loggedOutTemplate;
+					contentDiv.innerHTML = originalContentDivHTML;
+					toggleTasksCounter();
+					break;
+				default:
+					alert(`Unknown action ${action}`);
+					break;
+			}
+		}
+	}
+
+	if (
+		event.target.closest("#profile-edit-form") &&
+		(event.target.matches(".cancel-btn") || event.target.matches(".back-btn"))
+	) {
+		renderTaskFieldTemplate();
+	}
 });
 
 document.body.addEventListener("change", (event) => {
@@ -151,7 +271,28 @@ document.body.addEventListener("change", (event) => {
 	}
 });
 
+document.body.addEventListener("input", (event) => {
+	let profileEditForm;
+	if (
+		event.target.tagName === "INPUT" &&
+		(profileEditForm = event.target.closest("#profile-edit-form"))
+	) {
+		for (const input of Array.from(profileEditForm.elements).filter(
+			(element) => element.tagName === "INPUT",
+		)) {
+			input.setCustomValidity("");
+			input.reportValidity();
+		}
+	}
+});
+
 toggleTasksCounter();
+
+function renderTaskFieldTemplate() {
+	contentDiv.innerHTML = taskFieldTemplate;
+	queryElements();
+	renderTasks(appState.tasks);
+}
 
 function renderTasks(tasks) {
 	clearTasksDivs();

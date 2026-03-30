@@ -1,17 +1,21 @@
 import { BaseModel } from "./BaseModel";
-import { getFromStorage, addToStorage } from "../utils";
+import { getFromStorage, addToStorage, replaceStorage } from "../utils";
 
 export class User extends BaseModel {
 	constructor(login, password) {
 		super();
 		this.login = login;
 		this.password = password;
-		this.storageKey = "users";
+		this.storageKey = User.storageKey;
 		if (this.hasAccess) {
 			this.id = getFromStorage(this.storageKey).find(
 				(user) => user.login === login && user.password === password,
 			).id;
 		}
+	}
+
+	static get storageKey() {
+		return "users";
 	}
 
 	get hasAccess() {
@@ -35,6 +39,16 @@ export class User extends BaseModel {
 		} catch (error) {
 			throw new Error(error);
 		}
+	}
+
+	static update(userId, changedProperties) {
+		const users = getFromStorage(User.storageKey);
+		const userIndex = users.findIndex((user) => user.id === userId);
+		users[userIndex] = {
+			...users[userIndex],
+			...changedProperties,
+		};
+		replaceStorage(User.storageKey, users);
 	}
 
 	static get(id) {

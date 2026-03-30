@@ -19,6 +19,77 @@
 	grid-template-rows: auto 1fr max-content;
 }
 
+.user-menu {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	position: relative;
+}
+
+.avatar-wrapper {
+	background-color: var(--color-white);
+	border-radius: 50%;
+}
+
+.user-menu.active .arrow {
+	transform: rotate(180deg);
+}
+
+.user-menu:hover .arrow-path {
+	fill: var(--color-lightblue);
+}
+
+.user-contextmenu {
+	list-style: none;
+	background-color: var(--color-white);
+	color: var(--color-black);
+	padding: 0;
+	border-radius: 5px;
+	font-size: 14px;
+	width: 134px;
+	position: absolute;
+	top: 131%;
+	right: 0;
+}
+
+.user-contextmenu::before {
+	content: "";
+	position: absolute;
+	background: #FFF;
+	width: 11px;
+	height: 11px;
+	top: calc(-11px / 2);
+	right: 33px;
+	transform: rotate(45deg);
+	z-index: 1;
+}
+
+.contextmenu-item {
+	padding: 5px;
+	width: 100%;
+	position: relative;
+	z-index: 2;
+}
+
+.contextmenu-item:hover {
+	background-color: var(--color-gray-2);
+}
+
+.contextmenu-item:active {
+	background-color: var(--color-gray-3);
+}
+
+.contextmenu-item:first-of-type {
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+.contextmenu-item:last-of-type {
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
 .main {
 	padding-top: 20px;
 	overflow: auto;
@@ -27,7 +98,6 @@
 .container,
 #content {
 	height: 100%;
-	overflow: hidden;
 }
 
 #app-login-btn {
