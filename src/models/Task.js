@@ -37,4 +37,10 @@ export class Task extends BaseModel {
 		};
 		replaceStorage(Task.storageKey, appState.tasks);
 	}
+
+	static delete(taskId) {
+		const index = appState.tasks.findIndex((task) => task.id === taskId);
+		appState.tasks.splice(index, 1);
+		replaceStorage(Task.storageKey, appState.tasks);
+	}
 }

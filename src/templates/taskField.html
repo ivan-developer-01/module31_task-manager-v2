@@ -49,3 +49,25 @@
 		</div>
 	</div>
 </div>
+<div class="popups">
+	<div class="popup" id="task-edit-popup">
+		<div class="popup-overlay" data-action="cancel"></div>
+		<div class="popup-content">
+			<div class="popup-header">
+				<h3 class="popup-title" contenteditable>Popdown title</h3>
+				<button type="button" class="btn-close popup-btn-close" aria-label="Close" data-action="close"></button>
+			</div>
+			<div class="popup-body">
+				<input type="hidden" name="taskId" id="popup-edit-task-id">
+				<textarea class="popup-description">JavaScript value goes hejsdfghsdfkjre!</textarea>
+			</div>
+			<div class="popup-footer">
+				<div class="btn-group">
+					<button type="button" class="btn btn-primary popup-button" data-action="save">Save</button>
+					<button type="button" class="btn btn-danger popup-button" data-action="delete">Delete</button>
+					<button type="button" class="btn btn-secondary popup-button" data-action="cancel">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -5,7 +5,7 @@ import noAccessTemplate from "./templates/noAccess.html";
 import profileSettingsTemplate from "./templates/profile-settings.html";
 import loggedOutTemplate from "./templates/header/loggedOut.html";
 import loggedInTemplate from "./templates/header/loggedIn.html";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 import { User } from "./models/User";
 import { generateTestUser } from "./utils";
 import { State } from "./state";
@@ -93,7 +93,7 @@ document.addEventListener("submit", function (event) {
 		const [login, currentPassword, newPassword, newPasswordConfirmation] =
 			formData.values();
 		if (login === appState.currentUser.login && !newPassword) {
-			swal("You have not changed anything; aborting.");
+			Swal.fire("You have not changed anything; aborting.");
 			return;
 		}
 
@@ -138,9 +138,9 @@ document.addEventListener("submit", function (event) {
 				changedProperties.push("password");
 			}
 			User.update(appState.currentUser.id, appState.currentUser);
-			swal(`Successfully changed your ${changedProperties.join(" and ")}`).then(
-				() => renderTaskFieldTemplate(),
-			);
+			Swal.fire(
+				`Successfully changed your ${changedProperties.join(" and ")}`,
+			).then(() => renderTaskFieldTemplate());
 		}
 	}
 });
@@ -163,6 +163,14 @@ document.body.addEventListener("keyup", (event) => {
 		if (["enter", "return"].includes(event.key.toLowerCase())) {
 			handleTaskSubmit(event.target);
 		}
+	}
+
+	let editPopup;
+	if (
+		event.key.toLowerCase() === "escape" &&
+		(editPopup = contentDiv.querySelector("#task-edit-popup.active"))
+	) {
+		handlePopupAction(editPopup, "cancel");
 	}
 });
 
@@ -249,6 +257,23 @@ document.body.addEventListener("click", (event) => {
 	) {
 		renderTaskFieldTemplate();
 	}
+
+	let taskElement;
+	if ((taskElement = event.target.closest(".task"))) {
+		showEditPopup(
+			taskElement.textContent,
+			taskElement.dataset.description,
+			taskElement.dataset.id,
+		);
+	}
+
+	let editPopup, popupAction;
+	if (
+		(editPopup = event.target.closest("#task-edit-popup")) &&
+		(popupAction = event.target.dataset.action)
+	) {
+		handlePopupAction(editPopup, popupAction);
+	}
 });
 
 document.body.addEventListener("change", (event) => {
@@ -288,6 +313,71 @@ document.body.addEventListener("input", (event) => {
 
 toggleTasksCounter();
 
+function handlePopupAction(popup, action) {
+	const elements = getEditPopupElements(popup);
+	const title = elements.titleElement.textContent;
+	const description = elements.descriptionTextarea.value;
+	const taskId = elements.taskIdInput.value;
+	switch (action) {
+		case "cancel":
+		case "close":
+			popup.classList.remove("active");
+			break;
+		case "save":
+			if (!title) {
+				Swal.fire({
+					icon: "error",
+					title: "Error",
+					text: "Task title cannot be empty!",
+				});
+			} else {
+				Task.update(taskId, { title, description });
+				handlePopupAction(popup, "close");
+				renderTasks(appState.tasks);
+			}
+			break;
+		case "delete":
+			Swal.fire({
+				title: `Are you sure yodl;gjku want to delete "${title}"?`,
+				showDenyButton: true,
+				confirmButtonText: "Delete",
+				denyButtonText: "No, keep it",
+				reverseButtons: true,
+				customClass: {
+					confirmButton: "btn btn-danger",
+					denyButton: "btn btn-primary",
+				},
+			}).then((result) => {
+				if (result.isConfirmed) {
+					Task.delete(taskId);
+					handlePopupAction(popup, "close");
+					renderTasks(appState.tasks);
+				}
+			});
+			break;
+		default:
+			alert(`Unknown popup action ${action}!`);
+	}
+}
+
+function getEditPopupElements(editPopup) {
+	return {
+		titleElement: editPopup.querySelector(".popup-title"),
+		descriptionTextarea: editPopup.querySelector(".popup-description"),
+		taskIdInput: editPopup.querySelector("#popup-edit-task-id"),
+	};
+}
+
+function showEditPopup(taskTitle, taskDescription, taskId) {
+	const editPopup = contentDiv.querySelector("#task-edit-popup");
+	if (!editPopup) throw new Error("Edit popup not found.");
+	const popupElements = getEditPopupElements(editPopup);
+	popupElements.titleElement.textContent = taskTitle;
+	popupElements.descriptionTextarea.value = taskDescription;
+	popupElements.taskIdInput.value = taskId;
+	editPopup.classList.add("active");
+}
+
 function renderTaskFieldTemplate() {
 	contentDiv.innerHTML = taskFieldTemplate;
 	queryElements();
@@ -310,6 +400,7 @@ function renderTasks(tasks) {
 		listItem.classList.add("task");
 		listItem.textContent = task.title;
 		listItem.dataset.description = task.description;
+		listItem.dataset.id = task.id;
 		listItems[task.category].push(listItem);
 	}
 
