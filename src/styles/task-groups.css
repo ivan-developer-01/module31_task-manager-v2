@@ -43,14 +43,17 @@
 
 .task,
 .add-input-wrapper {
-	display: flex;
-	align-items: center;
 	background-color: var(--color-white);
 	border-radius: 10px;
 	padding: 7px 9px 7px 8px;
 	cursor: pointer;
 	min-height: 35px;
 	word-wrap: anywhere;
+}
+
+.task-owner-login {
+	font-weight: 500;
+	margin-right: 3px;
 }
 
 .task:hover {

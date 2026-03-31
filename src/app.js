@@ -3,26 +3,27 @@ import "./styles/style.css";
 import taskFieldTemplate from "./templates/taskField.html";
 import noAccessTemplate from "./templates/noAccess.html";
 import profileSettingsTemplate from "./templates/profile-settings.html";
+import manageUsersTemplate from "./templates/manageUsers.html";
 import loggedOutTemplate from "./templates/header/loggedOut.html";
 import loggedInTemplate from "./templates/header/loggedIn.html";
 import Swal from "sweetalert2";
 import { User } from "./models/User";
-import { generateTestUser } from "./utils";
+import { generateFirstUsers } from "./utils";
 import { State } from "./state";
 import { authUser } from "./services/auth";
 import { toggleTasksCounter, updateTasksCounter } from "./tasksCounter";
 import { Task } from "./models/Task";
 const headerRight = document.querySelector("#header-right");
 headerRight.innerHTML = loggedOutTemplate;
-export let backlogTasksDiv = null;
-export let backlogTasksUl = null;
-export let readyTasksDiv = null;
-export let readyTasksUl = null;
-export let inProgressTasksDiv = null;
-export let inProgressTasksUl = null;
-export let finishedTasksDiv = null;
-export let finishedTasksUl = null;
-let addInputWrapper = null,
+let backlogTasksDiv = null,
+	backlogTasksUl = null,
+	readyTasksDiv = null,
+	readyTasksUl = null,
+	inProgressTasksDiv = null,
+	inProgressTasksUl = null,
+	finishedTasksDiv = null,
+	finishedTasksUl = null,
+	addInputWrapper = null,
 	addInput = null,
 	backlogAddButton = null,
 	backlogSubmitButton = null;
@@ -37,9 +38,20 @@ const taskCategoryRelationships = new Map([
 
 export const appState = new State();
 
-const loginForm = document.querySelector("#app-login-form");
+const swal = Swal.mixin({
+	customClass: {
+		confirmButton: "btn btn-danger",
+		denyButton: "btn btn-primary",
+	},
+});
 
-if (!localStorage.getItem("users")) generateTestUser(User);
+// Generates first users on first page load.
+function checkUsers() {
+	const users = localStorage.getItem("users");
+	if (!users || JSON.parse(users).length === 0) generateFirstUsers(User);
+}
+
+checkUsers();
 
 function queryElements() {
 	backlogTasksDiv = contentDiv.querySelector("[data-group=backlog]");
@@ -72,7 +84,19 @@ document.addEventListener("submit", function (event) {
 		contentDiv.innerHTML = fieldHTMLContent;
 
 		if (isAuthenticated) {
+			document.documentElement.classList[
+				appState.currentUser.role === "admin" ? "add" : "remove"
+			]("is-admin");
 			headerRight.innerHTML = loggedInTemplate;
+			if (appState.currentUser.role === "admin") {
+				const userContextmenu = headerRight.querySelector(".user-contextmenu");
+				const listItem = document.createElement("li");
+				listItem.classList.add("contextmenu-item");
+				listItem.textContent = "Manage users";
+				listItem.dataset.action = "manage-users";
+				userContextmenu.prepend(listItem);
+			}
+
 			toggleTasksCounter();
 			appState.tasks = Task.getTasks();
 			queryElements();
@@ -93,7 +117,7 @@ document.addEventListener("submit", function (event) {
 		const [login, currentPassword, newPassword, newPasswordConfirmation] =
 			formData.values();
 		if (login === appState.currentUser.login && !newPassword) {
-			Swal.fire("You have not changed anything; aborting.");
+			swal.fire("You have not changed anything; aborting.");
 			return;
 		}
 
@@ -138,9 +162,9 @@ document.addEventListener("submit", function (event) {
 				changedProperties.push("password");
 			}
 			User.update(appState.currentUser.id, appState.currentUser);
-			Swal.fire(
-				`Successfully changed your ${changedProperties.join(" and ")}`,
-			).then(() => renderTaskFieldTemplate());
+			swal
+				.fire(`Successfully changed your ${changedProperties.join(" and ")}`)
+				.then(() => renderTaskFieldTemplate());
 		}
 	}
 });
@@ -188,7 +212,9 @@ document.body.addEventListener("click", (event) => {
 			event.target.closest(".task-group").dataset.group,
 		);
 		const sourceTasks = appState.tasks.filter(
-			(task) => task.category === sourceCategory,
+			(task) =>
+				appState.currentUser.canReadTask(task) &&
+				task.category === sourceCategory,
 		);
 		const select = event.target.previousElementSibling;
 		function createOption(value, content, disabled = false, selected = false) {
@@ -230,6 +256,10 @@ document.body.addEventListener("click", (event) => {
 		if (event.target.matches(".contextmenu-item")) {
 			const { action } = event.target.dataset;
 			switch (action) {
+				case "manage-users":
+					contentDiv.innerHTML = manageUsersTemplate;
+					initManageUsers();
+					break;
 				case "tasks":
 					renderTaskFieldTemplate();
 					break;
@@ -243,6 +273,7 @@ document.body.addEventListener("click", (event) => {
 					headerRight.innerHTML = loggedOutTemplate;
 					contentDiv.innerHTML = originalContentDivHTML;
 					toggleTasksCounter();
+					document.documentElement.classList.remove("is-admin");
 					break;
 				default:
 					alert(`Unknown action ${action}`);
@@ -274,12 +305,113 @@ document.body.addEventListener("click", (event) => {
 	) {
 		handlePopupAction(editPopup, popupAction);
 	}
+
+	let manageUsersAction;
+	if (
+		event.target.closest("#manage-users") &&
+		(manageUsersAction = event.target.dataset.action)
+	) {
+		function promptCreateUser(role) {
+			return new Promise(async (resolve, reject) => {
+				const sharedConfig = {
+					showCancelButton: true,
+					inputValidator: (value) => {
+						if (!value) return `The new ${role}'s login cannot be empty.`;
+					},
+				};
+
+				const loginPromptResult = await swal.fire({
+					titleText: `Enter the new ${role}'s login`,
+					input: "text",
+					inputLabel: `Enter login:`,
+					...sharedConfig,
+				});
+				if (loginPromptResult.isDismissed) {
+					reject();
+					return;
+				}
+
+				const passwordPromptResult = await swal.fire({
+					titleText: `Enter ${loginPromptResult.value}'s password`,
+					input: "password",
+					inputLabel: `Enter password:`,
+					...sharedConfig,
+				});
+				if (passwordPromptResult.isDismissed) {
+					reject();
+					return;
+				}
+
+				resolve({
+					login: loginPromptResult.value,
+					password: passwordPromptResult.value,
+				});
+			});
+		}
+		function handleNewUser(role, { login, password }) {
+			const user = new User(login, password, role);
+			User.save(user);
+			initManageUsers();
+		}
+		switch (manageUsersAction) {
+			case "delete-user":
+				const userId = event.target.dataset.id;
+				let userDeletingThemselves = false;
+				if (userId === appState.currentUser.id) userDeletingThemselves = true;
+
+				const listItem = event.target.closest(".user-list-item");
+				const userRole = listItem.dataset.role;
+				const userLogin =
+					listItem.querySelector(".user-list-login").textContent;
+
+				const userPresentation = userDeletingThemselves
+					? "<b>yourself</b>"
+					: `the ${userRole} '${userLogin}'`;
+				swal
+					.fire({
+						title: "Confirm deletion",
+						[userDeletingThemselves ? "html" : "text"]:
+							`Are you really sure you want to delete ${userPresentation}?`,
+						icon: "question",
+						showDenyButton: true,
+						confirmButtonText: "Delete",
+						denyButtonText: "No, keep",
+						reverseButtons: true,
+					})
+					.then((result) => {
+						if (result.isConfirmed) {
+							User.delete(userId);
+							initManageUsers();
+						}
+					});
+				break;
+			case "add-user":
+				// prettier-ignore
+				promptCreateUser("user").then((result) => handleNewUser("user", result));
+				break;
+			case "add-admin":
+				// prettier-ignore
+				promptCreateUser("admin").then((result) => handleNewUser("admin", result));
+				break;
+			default:
+				alert(`Unknown action ${manageUsersAction}!`);
+				break;
+		}
+	}
 });
 
 document.body.addEventListener("change", (event) => {
 	let select;
 	if ((select = event.target.closest("select"))) {
 		const taskId = select.value;
+		if (!appState.currentUser.canReadTask(Task.get(taskId))) {
+			swal.fire({
+				title: "Error",
+				titleText: "You can't move a task you can't see.",
+				icon: "error",
+			});
+			return;
+		}
 		// Handle changing the task category.
 		const newTaskCategory = select.closest(".task-group").dataset.group;
 		select.classList.add("d-none");
@@ -313,6 +445,54 @@ document.body.addEventListener("input", (event) => {
 
 toggleTasksCounter();
 
+function initManageUsers() {
+	const usersList = contentDiv.querySelector(".user-list[data-role=user]"),
+		adminsList = contentDiv.querySelector(".user-list[data-role=admin]");
+	for (const list of [usersList, adminsList]) {
+		list.innerHTML = "";
+	}
+
+	const users = [],
+		admins = [];
+	for (const user of User.getUsers()) {
+		if (user.role === "user") users.push(user);
+		else if (user.role === "admin") admins.push(user);
+		else users.push(user);
+	}
+
+	function getListItems(usersArray) {
+		return usersArray.map((user) => {
+			const listItem = document.createElement("li");
+			listItem.dataset.role = user.role;
+			listItem.classList.add("user-list-item");
+
+			const loginSpan = document.createElement("span");
+			loginSpan.classList.add("user-list-login");
+			loginSpan.textContent = user.login;
+			listItem.append(loginSpan);
+			listItem.insertAdjacentText("beforeend", " - ");
+
+			const passwordSpan = document.createElement("span");
+			passwordSpan.classList.add("user-list-password");
+			passwordSpan.textContent = user.password;
+			listItem.append(passwordSpan);
+			listItem.insertAdjacentText("beforeend", " ");
+
+			const deleteBtn = document.createElement("button");
+			deleteBtn.classList.add("btn", "btn-danger");
+			deleteBtn.dataset.action = "delete-user";
+			deleteBtn.dataset.id = user.id;
+			deleteBtn.innerHTML = "&times;";
+			listItem.append(deleteBtn);
+
+			return listItem;
+		});
+	}
+
+	usersList.append(...getListItems(users));
+	adminsList.append(...getListItems(admins));
+}
+
 function handlePopupAction(popup, action) {
 	const elements = getEditPopupElements(popup);
 	const title = elements.titleElement.textContent;
@@ -325,10 +505,10 @@ function handlePopupAction(popup, action) {
 			break;
 		case "save":
 			if (!title) {
-				Swal.fire({
-					icon: "error",
+				swal.fire({
 					title: "Error",
 					text: "Task title cannot be empty!",
+					icon: "error",
 				});
 			} else {
 				Task.update(taskId, { title, description });
@@ -337,23 +517,25 @@ function handlePopupAction(popup, action) {
 			}
 			break;
 		case "delete":
-			Swal.fire({
-				title: `Are you sure yodl;gjku want to delete "${title}"?`,
-				showDenyButton: true,
-				confirmButtonText: "Delete",
-				denyButtonText: "No, keep it",
-				reverseButtons: true,
-				customClass: {
-					confirmButton: "btn btn-danger",
-					denyButton: "btn btn-primary",
-				},
-			}).then((result) => {
-				if (result.isConfirmed) {
-					Task.delete(taskId);
-					handlePopupAction(popup, "close");
-					renderTasks(appState.tasks);
-				}
-			});
+			swal
+				.fire({
+					titleText: `Are you sure you want to delete "${title}"?`,
+					showDenyButton: true,
+					confirmButtonText: "Delete",
+					denyButtonText: "No, keep it",
+					reverseButtons: true,
+					customClass: {
+						confirmButton: "btn btn-danger",
+						denyButton: "btn btn-primary",
+					},
+				})
+				.then((result) => {
+					if (result.isConfirmed) {
+						Task.delete(taskId);
+						handlePopupAction(popup, "close");
+						renderTasks(appState.tasks);
+					}
+				});
 			break;
 		default:
 			alert(`Unknown popup action ${action}!`);
@@ -393,14 +575,30 @@ function renderTasks(tasks) {
 		finished: [],
 	};
 
-	for (const task of tasks.filter((task) =>
+	const accessibleTasks = tasks.filter((task) =>
 		appState.currentUser.canReadTask(task),
-	)) {
+	);
+
+	const users = new Map();
+
+	for (const task of accessibleTasks) {
 		const listItem = document.createElement("li");
 		listItem.classList.add("task");
 		listItem.textContent = task.title;
 		listItem.dataset.description = task.description;
 		listItem.dataset.id = task.id;
+		if (appState.currentUser.isAdmin()) {
+			let owner;
+			if (users.has(task.belongsTo)) owner = users.get(task.belongsTo);
+			else {
+				owner = User.get(task.belongsTo);
+				users.set(task.belongsTo, owner);
+			}
+			const ownerLoginSpan = document.createElement("span");
+			ownerLoginSpan.classList.add("task-owner-login");
+			ownerLoginSpan.textContent = owner.login + ":";
+			listItem.insertAdjacentElement("afterbegin", ownerLoginSpan);
+		}
 		listItems[task.category].push(listItem);
 	}
 

@@ -25,8 +25,12 @@ export class Task extends BaseModel {
 		}
 	}
 
+	static get(taskId) {
+		return Task.getTasks().find((task) => task.id === taskId) ?? null;
+	}
+
 	static getTasks() {
-		return getFromStorage(Task.storageKey);
+		return getFromStorage(this.storageKey);
 	}
 
 	static update(taskId, changedProperties) {
@@ -35,12 +39,18 @@ export class Task extends BaseModel {
 			...appState.tasks[taskIndex],
 			...changedProperties,
 		};
-		replaceStorage(Task.storageKey, appState.tasks);
+		replaceStorage(this.storageKey, appState.tasks);
 	}
 
 	static delete(taskId) {
 		const index = appState.tasks.findIndex((task) => task.id === taskId);
+		if (!index) return;
 		appState.tasks.splice(index, 1);
-		replaceStorage(Task.storageKey, appState.tasks);
+		replaceStorage(this.storageKey, appState.tasks);
+	}
+
+	static deleteByUserId(userId) {
+		appState.tasks = appState.tasks.filter((task) => task.belongsTo !== userId);
+		replaceStorage(this.storageKey, appState.tasks);
 	}
 }

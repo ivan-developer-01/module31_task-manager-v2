@@ -1,16 +1,20 @@
 import { BaseModel } from "./BaseModel";
 import { getFromStorage, addToStorage, replaceStorage } from "../utils";
+import { Task } from "./Task";
 
 export class User extends BaseModel {
-	constructor(login, password) {
+	constructor(login, password, role) {
 		super();
 		this.login = login;
 		this.password = password;
 		this.storageKey = User.storageKey;
+		this.role = role;
 		if (this.hasAccess) {
-			this.id = getFromStorage(this.storageKey).find(
+			const userEntry = getFromStorage(this.storageKey).find(
 				(user) => user.login === login && user.password === password,
-			).id;
+			);
+			this.id = userEntry.id;
+			this.role = userEntry.role;
 		}
 	}
 
@@ -28,8 +32,12 @@ export class User extends BaseModel {
 		return false;
 	}
 
+	isAdmin() {
+		return this.role === "admin";
+	}
+
 	canReadTask(task) {
-		return task.belongsTo === this.id;
+		return this.isAdmin() || task.belongsTo === this.id;
 	}
 
 	static save(user) {
@@ -52,11 +60,19 @@ export class User extends BaseModel {
 	}
 
 	static get(id) {
-		const users = getFromStorage(this.storageKey);
-		for (const user of users) {
-			if (user.id === id) return user;
-		}
+		return this.getUsers().find((user) => user.id === id) ?? null;
+	}
 
-		return null;
+	static getUsers(id) {
+		return getFromStorage(this.storageKey);
+	}
+
+	static delete(userId) {
+		const users = getFromStorage(this.storageKey);
+		const index = users.findIndex((user) => user.id === userId);
+		if (!index) return;
+		Task.deleteByUserId(userId);
+		users.splice(index, 1);
+		replaceStorage(this.storageKey, users);
 	}
 }

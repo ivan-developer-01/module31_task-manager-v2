@@ -1,0 +1,10 @@
+.user-list-password {
+	font-family: monospace;
+	filter: blur(5px);
+	user-select: none;
+}
+
+.user-list-password:hover {
+	filter: none;
+	user-select: text;
+}
