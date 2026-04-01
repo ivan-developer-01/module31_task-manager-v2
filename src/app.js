@@ -10,6 +10,10 @@ import profileSettingsTemplate from "./templates/profileSettings.html";
 import manageUsersTemplate from "./templates/manageUsers.html";
 import loggedOutTemplate from "./templates/header/loggedOut.html";
 import loggedInTemplate from "./templates/header/loggedIn.html";
+
+// Module exports go here
+import "./modules/dragDrop";
+
 import Swal from "sweetalert2";
 import { User } from "./models/User";
 import { generateFirstUsers } from "./utils";
@@ -105,7 +109,7 @@ document.addEventListener("submit", function (event) {
 			toggleTasksCounter();
 			appState.tasks = Task.getTasks();
 			queryElements();
-			renderTasks(appState.tasks);
+			renderTasks();
 			updateTasksCounter();
 		}
 	} else if (event.target.matches("#profile-edit-form")) {
@@ -437,7 +441,7 @@ document.body.addEventListener("change", (event) => {
 			{ splice: true },
 		);
 
-		renderTasks(appState.tasks);
+		renderTasks();
 		updateTasksCounter();
 	}
 });
@@ -453,68 +457,6 @@ document.body.addEventListener("input", (event) => {
 		)) {
 			input.setCustomValidity("");
 			input.reportValidity();
-		}
-	}
-});
-
-// Map<source, destination[]>
-const validTaskDropDestinations = new Map([
-	["backlog", new Set(["ready"])],
-	["ready", new Set(["backlog", "in-progress"])],
-	["in-progress", new Set(["ready", "finished"])],
-	["finished", new Set(["in-progress"])],
-]);
-
-function isValidDropTarget(event, taskGroupElement) {
-	const sourceCategory = event.dataTransfer.getData("taskCategory");
-	const destinationCategory = taskGroupElement.dataset.group;
-	const validDestinations = validTaskDropDestinations.get(sourceCategory);
-	return validDestinations.has(destinationCategory);
-}
-
-document.body.addEventListener("dragstart", (event) => {
-	let taskListItem;
-	if ((taskListItem = event.target.closest(".task"))) {
-		const taskCategory = event.target.closest(".task-group").dataset.group;
-		event.dataTransfer.setData("taskId", taskListItem.dataset.id);
-		event.dataTransfer.setData("taskCategory", taskCategory);
-	}
-});
-
-document.body.addEventListener("dragover", (event) => {
-	let taskGroupElement;
-	if (
-		(taskGroupElement = event.target.closest(".task-group")) &&
-		isValidDropTarget(event, taskGroupElement)
-	) {
-		event.preventDefault();
-		taskGroupElement.classList.add("task-dropzone");
-	}
-});
-
-document.body.addEventListener("dragleave", (event) => {
-	let taskGroupElement;
-	if ((taskGroupElement = event.target.closest(".task-group"))) {
-		taskGroupElement.classList.remove("task-dropzone");
-	}
-});
-
-document.body.addEventListener("drop", (event) => {
-	// event.preventDefault();
-	let taskGroupElement;
-	if ((taskGroupElement = event.target.closest(".task-group"))) {
-		taskGroupElement.classList.remove("task-dropzone");
-		const taskId = event.dataTransfer.getData("taskId");
-		const destinationCategory = taskGroupElement.dataset.group;
-		if (isValidDropTarget(event, taskGroupElement)) {
-			Task.update(
-				taskId,
-				{
-					category: destinationCategory,
-				},
-				{ splice: true },
-			);
-			renderTasks(appState.tasks);
 		}
 	}
 });
@@ -589,7 +531,7 @@ function handlePopupAction(popup, action) {
 			} else {
 				Task.update(taskId, { title, description });
 				handlePopupAction(popup, "close");
-				renderTasks(appState.tasks);
+				renderTasks();
 			}
 			break;
 		case "delete":
@@ -609,7 +551,7 @@ function handlePopupAction(popup, action) {
 					if (result.isConfirmed) {
 						Task.delete(taskId);
 						handlePopupAction(popup, "close");
-						renderTasks(appState.tasks);
+						renderTasks();
 					}
 				});
 			break;
@@ -639,10 +581,10 @@ function showEditPopup(taskTitle, taskDescription, taskId) {
 function renderTaskFieldTemplate() {
 	contentDiv.innerHTML = taskFieldTemplate;
 	queryElements();
-	renderTasks(appState.tasks);
+	renderTasks();
 }
 
-function renderTasks(tasks) {
+export function renderTasks(tasks = appState.tasks) {
 	clearTasksDivs();
 	const listItems = {
 		backlog: [],
@@ -720,7 +662,7 @@ function handleTaskSubmit(addInput) {
 		const task = new Task(taskTitle, "", "backlog", appState.currentUser.id);
 		Task.save(task);
 		appState.tasks.push(task);
-		renderTasks(appState.tasks);
+		renderTasks();
 		updateTasksCounter();
 	}
 
