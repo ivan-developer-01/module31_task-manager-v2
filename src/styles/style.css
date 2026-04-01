@@ -21,6 +21,10 @@
 	grid-template-rows: auto 1fr max-content;
 }
 
+.navbar {
+	background-color: var(--color-darkblue);
+}
+
 .user-menu {
 	display: flex;
 	align-items: center;

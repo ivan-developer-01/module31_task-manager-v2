@@ -1,10 +1,12 @@
 .popup {
 	display: none;
 	position: fixed;
-	top: 76px;
-	left: 27px;
-	width: calc(100% - 27px - 27px);
-	height: calc(100% - 76px - 76px);
+	--top: 76px;
+	--left: 27px;
+	top: var(--top);
+	left: var(--left);
+	width: calc(100% - var(--left) - var(--left));
+	height: calc(100% - var(--top) - var(--top));
 	z-index: 999;
 }
 
@@ -32,6 +34,7 @@
 	grid-template-rows: auto 1fr auto;
 	gap: 15px;
 	padding: 22px 23px 23px 28px;
+	border-radius: 5px;
 }
 
 .popup-header,
@@ -41,6 +44,7 @@
 
 .popup-header {
 	justify-content: space-between;
+	gap: 15px;
 }
 
 .popup-footer {

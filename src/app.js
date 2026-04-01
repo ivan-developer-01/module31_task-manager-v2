@@ -1,5 +1,8 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./styles/style.css";
+// The following import must be in JS, otherwise you'll face a complex bug!
+import "./styles/mobile.css";
 import "drag-drop-touch";
 import taskFieldTemplate from "./templates/taskField.html";
 import noAccessTemplate from "./templates/noAccess.html";
@@ -85,6 +88,7 @@ document.addEventListener("submit", function (event) {
 		contentDiv.innerHTML = fieldHTMLContent;
 
 		if (isAuthenticated) {
+			document.documentElement.classList.add("logged-in");
 			document.documentElement.classList[
 				appState.currentUser.role === "admin" ? "add" : "remove"
 			]("is-admin");
@@ -274,6 +278,7 @@ document.body.addEventListener("click", (event) => {
 					headerRight.innerHTML = loggedOutTemplate;
 					contentDiv.innerHTML = originalContentDivHTML;
 					toggleTasksCounter();
+					document.documentElement.classList.remove("logged-in");
 					document.documentElement.classList.remove("is-admin");
 					break;
 				default:

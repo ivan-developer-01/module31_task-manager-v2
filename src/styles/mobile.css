@@ -1,0 +1,57 @@
+@media (max-width: 990px) {
+	.navbar {
+		background-color: var(--color-blue);
+	}
+
+	.logged-in .navbar:has(.user-menu.active) {
+		margin-bottom: 130px;
+	}
+
+	#app-login-form {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.logged-in .navbar-toggler {
+		display: none;
+	}
+
+	.navbar-brand {
+		opacity: 0;
+	}
+
+	.logged-in .navbar-collapse {
+		display: flex;
+		flex-basis: unset;
+		justify-content: flex-end;
+	}
+
+	.task-groups {
+		flex-direction: column;
+		gap: 50px;
+		height: unset;
+	}
+
+	.task-group {
+		height: max-content;
+		min-height: max-content;
+	}
+
+	.btn-group {
+		width: 100%;
+	}
+
+	.user-list-password {
+		/* hover is quirky on touch devices */
+		filter: none;
+	}
+
+	.footer {
+		display: none;
+	}
+
+	.popup {
+		--top: 20px;
+		--left: 15px;
+	}
+}
