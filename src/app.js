@@ -3,7 +3,7 @@ import "./styles/style.css";
 import "drag-drop-touch";
 import taskFieldTemplate from "./templates/taskField.html";
 import noAccessTemplate from "./templates/noAccess.html";
-import profileSettingsTemplate from "./templates/profile-settings.html";
+import profileSettingsTemplate from "./templates/profileSettings.html";
 import manageUsersTemplate from "./templates/manageUsers.html";
 import loggedOutTemplate from "./templates/header/loggedOut.html";
 import loggedInTemplate from "./templates/header/loggedIn.html";
