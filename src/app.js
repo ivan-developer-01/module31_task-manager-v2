@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/style.css";
+import "drag-drop-touch";
 import taskFieldTemplate from "./templates/taskField.html";
 import noAccessTemplate from "./templates/noAccess.html";
 import profileSettingsTemplate from "./templates/profile-settings.html";
@@ -419,9 +420,13 @@ document.body.addEventListener("change", (event) => {
 			.closest(".task-group-controls")
 			.querySelector(".task-add-button")
 			.classList.remove("d-none");
-		Task.update(taskId, {
-			category: newTaskCategory,
-		});
+		Task.update(
+			taskId,
+			{
+				category: newTaskCategory,
+			},
+			{ splice: true },
+		);
 
 		renderTasks(appState.tasks);
 		updateTasksCounter();
@@ -439,6 +444,68 @@ document.body.addEventListener("input", (event) => {
 		)) {
 			input.setCustomValidity("");
 			input.reportValidity();
+		}
+	}
+});
+
+// Map<source, destination[]>
+const validTaskDropDestinations = new Map([
+	["backlog", new Set(["ready"])],
+	["ready", new Set(["backlog", "in-progress"])],
+	["in-progress", new Set(["ready", "finished"])],
+	["finished", new Set(["in-progress"])],
+]);
+
+function isValidDropTarget(event, taskGroupElement) {
+	const sourceCategory = event.dataTransfer.getData("taskCategory");
+	const destinationCategory = taskGroupElement.dataset.group;
+	const validDestinations = validTaskDropDestinations.get(sourceCategory);
+	return validDestinations.has(destinationCategory);
+}
+
+document.body.addEventListener("dragstart", (event) => {
+	let taskListItem;
+	if ((taskListItem = event.target.closest(".task"))) {
+		const taskCategory = event.target.closest(".task-group").dataset.group;
+		event.dataTransfer.setData("taskId", taskListItem.dataset.id);
+		event.dataTransfer.setData("taskCategory", taskCategory);
+	}
+});
+
+document.body.addEventListener("dragover", (event) => {
+	let taskGroupElement;
+	if (
+		(taskGroupElement = event.target.closest(".task-group")) &&
+		isValidDropTarget(event, taskGroupElement)
+	) {
+		event.preventDefault();
+		taskGroupElement.classList.add("task-dropzone");
+	}
+});
+
+document.body.addEventListener("dragleave", (event) => {
+	let taskGroupElement;
+	if ((taskGroupElement = event.target.closest(".task-group"))) {
+		taskGroupElement.classList.remove("task-dropzone");
+	}
+});
+
+document.body.addEventListener("drop", (event) => {
+	// event.preventDefault();
+	let taskGroupElement;
+	if ((taskGroupElement = event.target.closest(".task-group"))) {
+		taskGroupElement.classList.remove("task-dropzone");
+		const taskId = event.dataTransfer.getData("taskId");
+		const destinationCategory = taskGroupElement.dataset.group;
+		if (isValidDropTarget(event, taskGroupElement)) {
+			Task.update(
+				taskId,
+				{
+					category: destinationCategory,
+				},
+				{ splice: true },
+			);
+			renderTasks(appState.tasks);
 		}
 	}
 });
@@ -587,6 +654,7 @@ function renderTasks(tasks) {
 		listItem.textContent = task.title;
 		listItem.dataset.description = task.description;
 		listItem.dataset.id = task.id;
+		listItem.setAttribute("draggable", "true");
 		if (appState.currentUser.isAdmin()) {
 			let owner;
 			if (users.has(task.belongsTo)) owner = users.get(task.belongsTo);

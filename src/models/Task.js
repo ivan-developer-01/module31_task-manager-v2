@@ -33,12 +33,18 @@ export class Task extends BaseModel {
 		return getFromStorage(this.storageKey);
 	}
 
-	static update(taskId, changedProperties) {
+	static update(taskId, changedProperties, { splice = false } = {}) {
 		const taskIndex = appState.tasks.findIndex((task) => task.id === taskId);
-		appState.tasks[taskIndex] = {
-			...appState.tasks[taskIndex],
-			...changedProperties,
-		};
+		if (splice) {
+			const [savedTask] = appState.tasks.splice(taskIndex, 1);
+			appState.tasks.push({ ...savedTask, ...changedProperties });
+			// what a genius
+		} else {
+			appState.tasks[taskIndex] = {
+				...appState.tasks[taskIndex],
+				...changedProperties,
+			};
+		}
 		replaceStorage(this.storageKey, appState.tasks);
 	}
 
