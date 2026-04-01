@@ -394,12 +394,12 @@ document.body.addEventListener("click", (event) => {
 			}
 			case "add-user": {
 				// prettier-ignore
-				promptCreateUser("user").then((result) => handleNewUser("user", result));
+				promptCreateUser("user").then((result) => handleNewUser("user", result)).catch(() => { });
 				break;
 			}
 			case "add-admin": {
 				// prettier-ignore
-				promptCreateUser("admin").then((result) => handleNewUser("admin", result));
+				promptCreateUser("admin").then((result) => handleNewUser("admin", result)).catch(() => { });
 				break;
 			}
 			default: {
