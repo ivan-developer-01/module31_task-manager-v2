@@ -45,7 +45,7 @@ export class User extends BaseModel {
 			addToStorage(user, user.storageKey);
 			return true;
 		} catch (error) {
-			throw new Error(error);
+			throw new Error("Failed to save user", { cause: error });
 		}
 	}
 
@@ -63,7 +63,7 @@ export class User extends BaseModel {
 		return this.getUsers().find((user) => user.id === id) ?? null;
 	}
 
-	static getUsers(id) {
+	static getUsers() {
 		return getFromStorage(this.storageKey);
 	}
 

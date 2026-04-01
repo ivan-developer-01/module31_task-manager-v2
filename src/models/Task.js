@@ -21,7 +21,7 @@ export class Task extends BaseModel {
 			addToStorage(task, task.storageKey);
 			return true;
 		} catch (error) {
-			throw new Error(error);
+			throw new Error("Failed to save task", { cause: error });
 		}
 	}
 

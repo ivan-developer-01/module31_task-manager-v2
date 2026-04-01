@@ -116,7 +116,6 @@ document.addEventListener("submit", function (event) {
 		const {
 			login: loginInput,
 			"current-password": currentPasswordInput,
-			"new-password": newPasswordInput,
 			"confirm-new-password": confirmNewPasswordInput,
 		} = event.target.elements;
 		const [login, currentPassword, newPassword, newPasswordConfirmation] =
@@ -261,19 +260,22 @@ document.body.addEventListener("click", (event) => {
 		if (event.target.matches(".contextmenu-item")) {
 			const { action } = event.target.dataset;
 			switch (action) {
-				case "manage-users":
+				case "manage-users": {
 					contentDiv.innerHTML = manageUsersTemplate;
 					initManageUsers();
 					break;
-				case "tasks":
+				}
+				case "tasks": {
 					renderTaskFieldTemplate();
 					break;
-				case "profile":
+				}
+				case "profile": {
 					contentDiv.innerHTML = profileSettingsTemplate;
 					const loginInput = contentDiv.querySelector("#login-input");
 					loginInput.value = appState.currentUser.login;
 					break;
-				case "logout":
+				}
+				case "logout": {
 					appState.currentUser = null;
 					headerRight.innerHTML = loggedOutTemplate;
 					contentDiv.innerHTML = originalContentDivHTML;
@@ -281,9 +283,11 @@ document.body.addEventListener("click", (event) => {
 					document.documentElement.classList.remove("logged-in");
 					document.documentElement.classList.remove("is-admin");
 					break;
-				default:
+				}
+				default: {
 					alert(`Unknown action ${action}`);
 					break;
+				}
 			}
 		}
 	}
@@ -317,42 +321,38 @@ document.body.addEventListener("click", (event) => {
 		event.target.closest("#manage-users") &&
 		(manageUsersAction = event.target.dataset.action)
 	) {
-		function promptCreateUser(role) {
-			return new Promise(async (resolve, reject) => {
-				const sharedConfig = {
-					showCancelButton: true,
-					inputValidator: (value) => {
-						if (!value) return `The new ${role}'s login cannot be empty.`;
-					},
-				};
+		async function promptCreateUser(role) {
+			const sharedConfig = {
+				showCancelButton: true,
+				inputValidator: (value) => {
+					if (!value) return `The new ${role}'s login cannot be empty.`;
+				},
+			};
 
-				const loginPromptResult = await swal.fire({
-					titleText: `Enter the new ${role}'s login`,
-					input: "text",
-					inputLabel: `Enter login:`,
-					...sharedConfig,
-				});
-				if (loginPromptResult.isDismissed) {
-					reject();
-					return;
-				}
-
-				const passwordPromptResult = await swal.fire({
-					titleText: `Enter ${loginPromptResult.value}'s password`,
-					input: "password",
-					inputLabel: `Enter password:`,
-					...sharedConfig,
-				});
-				if (passwordPromptResult.isDismissed) {
-					reject();
-					return;
-				}
-
-				resolve({
-					login: loginPromptResult.value,
-					password: passwordPromptResult.value,
-				});
+			const loginPromptResult = await swal.fire({
+				titleText: `Enter the new ${role}'s login`,
+				input: "text",
+				inputLabel: `Enter login:`,
+				...sharedConfig,
 			});
+			if (loginPromptResult.isDismissed) {
+				throw new Error();
+			}
+
+			const passwordPromptResult = await swal.fire({
+				titleText: `Enter ${loginPromptResult.value}'s password`,
+				input: "password",
+				inputLabel: `Enter password:`,
+				...sharedConfig,
+			});
+			if (passwordPromptResult.isDismissed) {
+				throw new Error();
+			}
+
+			return {
+				login: loginPromptResult.value,
+				password: passwordPromptResult.value,
+			};
 		}
 		function handleNewUser(role, { login, password }) {
 			const user = new User(login, password, role);
@@ -360,7 +360,7 @@ document.body.addEventListener("click", (event) => {
 			initManageUsers();
 		}
 		switch (manageUsersAction) {
-			case "delete-user":
+			case "delete-user": {
 				const userId = event.target.dataset.id;
 				let userDeletingThemselves = false;
 				if (userId === appState.currentUser.id) userDeletingThemselves = true;
@@ -391,17 +391,21 @@ document.body.addEventListener("click", (event) => {
 						}
 					});
 				break;
-			case "add-user":
+			}
+			case "add-user": {
 				// prettier-ignore
 				promptCreateUser("user").then((result) => handleNewUser("user", result));
 				break;
-			case "add-admin":
+			}
+			case "add-admin": {
 				// prettier-ignore
 				promptCreateUser("admin").then((result) => handleNewUser("admin", result));
 				break;
-			default:
+			}
+			default: {
 				alert(`Unknown action ${manageUsersAction}!`);
 				break;
+			}
 		}
 	}
 });
