@@ -28,7 +28,7 @@ jobs:
       - name: Deploy to build branch
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: build
           force_orphan: true # optional: cleans the branch history
