@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -23,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Build production bundle
-        run: npm run build # or "webpack --mode=production" if no script
+        run: npm run build
 
       - name: Deploy to build branch
         uses: peaceiris/actions-gh-pages@v4
@@ -31,4 +37,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: build
-          force_orphan: true # optional: cleans the branch history
+          force_orphan: true
