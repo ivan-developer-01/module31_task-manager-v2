@@ -5,7 +5,7 @@
 	"description": "Skillfactory educational project. Pure JS Kanban board written with OOP.",
 	"main": "app.js",
 	"scripts": {
-		"start": "webpack serve --hot --mode development --open",
+		"start": "webpack serve --mode development --open",
 		"build": "webpack --mode production"
 	},
 	"repository": {
