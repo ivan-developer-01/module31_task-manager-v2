@@ -8,7 +8,7 @@ export default function init() {
 	if (!i18nPromise) {
 		i18nPromise = i18next.use(HttpBackend).init({
 			fallbackLng: false,
-			backend: { loadPath: "/locales/{{lng}}/translations.json" },
+			backend: { loadPath: "./locales/{{lng}}/translations.json" },
 		});
 	}
 	return i18nPromise;
