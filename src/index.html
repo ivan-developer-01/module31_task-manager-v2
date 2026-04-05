@@ -4,12 +4,12 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Simple TODO App</title>
+	<title data-i18n="app-title">Kanban Board</title>
 </head>
 <body class="body">
 	<nav class="navbar navbar-expand-lg navbar-dark">
 		<div class="container-fluid">
-			<a class="navbar-brand" href="#">SimpleTODO</a>
+			<a class="navbar-brand" href="#" data-i18n="app-title">Kanban Board</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
 				data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
 				aria-label="Toggle navigation">
@@ -26,20 +26,26 @@
 	</nav>
 	<main class="main">
 		<div class="container">
-			<div id="content">Please Sign In to see your tasks!</div>
+			<div id="content">
+				<p data-i18n="please-sign-in">Please Sign In to see your tasks!</p>
+			</div>
 		</div>
 	</main>
 	<footer class="footer">
 		<div class="tasks-counter visibility-hidden">
 			<div>
-				Active tasks: <span id="active-tasks-count">0</span>
+				<span data-i18n="active-tasks">Active tasks</span>: <span id="active-tasks-count">0</span>
 			</div>
 			<div>
-				Finished tasks: <span id="finished-tasks-count">0</span>
+				<span data-i18n="finished-tasks">Finished tasks</span>: <span id="finished-tasks-count">0</span>
 			</div>
 		</div>
-		<div>
-			Kanban board by <a href="https://github.com/ivan-developer-01" class="author-link">Ivan</a>, 2026
+		<div class="footer-right-part">
+			<select class="language-select">
+				<option value="en">English</option>
+				<option value="ru">Русский</option>
+			</select>
+			<span><span data-i18n="app-title-by">Kanban Board by</span> <a href="https://github.com/Peter-developer01" class="author-link">Peter</a>, 2026</span>
 		</div>
 	</footer>
 </body>

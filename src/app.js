@@ -13,6 +13,12 @@ import loggedInTemplate from "./templates/header/loggedIn.html";
 
 // Module exports go here
 import "./modules/dragDrop";
+import { t } from "./modules/i18n";
+import "./modules/i18n-ui";
+// You could also do this, to ensure that i18n is loaded before the rest of the app:
+// import initI18n from "./modules/i18n";
+// await initI18n();
+// But it can be bad.
 
 import Swal from "sweetalert2";
 import { User } from "./models/User";
@@ -71,13 +77,13 @@ function queryElements() {
 	finishedTasksDiv = contentDiv.querySelector("[data-group=finished]");
 	finishedTasksUl = finishedTasksDiv.querySelector(".task-list");
 
-	backlogAddButton = backlogTasksDiv.querySelector(".task-add-button");
+	backlogAddButton = backlogTasksDiv.querySelector("#backlog-task-add-button");
 	backlogSubmitButton = backlogTasksDiv.querySelector(".task-submit-button");
 	addInputWrapper = contentDiv.querySelector(".add-input-wrapper");
 	addInput = addInputWrapper.querySelector(".add-input");
 }
 
-document.addEventListener("submit", function (event) {
+document.addEventListener("submit", async function (event) {
 	if (event.target.matches("#app-login-form")) {
 		event.preventDefault();
 		const formData = new FormData(event.target);
@@ -101,6 +107,7 @@ document.addEventListener("submit", function (event) {
 				const userContextmenu = headerRight.querySelector(".user-contextmenu");
 				const listItem = document.createElement("li");
 				listItem.classList.add("contextmenu-item");
+				listItem.dataset.i18n = "manage-users";
 				listItem.textContent = "Manage users";
 				listItem.dataset.action = "manage-users";
 				userContextmenu.prepend(listItem);
@@ -125,7 +132,9 @@ document.addEventListener("submit", function (event) {
 		const [login, currentPassword, newPassword, newPasswordConfirmation] =
 			formData.values();
 		if (login === appState.currentUser.login && !newPassword) {
-			swal.fire("You have not changed anything; aborting.");
+			swal.fire(
+				t("not-changed-anything", "You have not changed anything; aborting."),
+			);
 			return;
 		}
 
@@ -135,26 +144,35 @@ document.addEventListener("submit", function (event) {
 		}
 
 		if (!login) {
-			invalidate(loginInput, "The login must not be empty.");
+			invalidate(loginInput, t("empty-login", "The login must not be empty."));
 		}
 		if (newPassword) {
 			if (!currentPassword) {
 				invalidate(
 					currentPasswordInput,
-					"You must confirm your current password to change it.",
+					t(
+						"must-confirm-current-password",
+						"You must confirm your current password to change it.",
+					),
 				);
 			} else if (currentPassword !== appState.currentUser.password) {
 				invalidate(
 					currentPasswordInput,
-					"The provided password does not match your password.",
+					t(
+						"wrong-password",
+						"The provided password does not match your password.",
+					),
 				);
 			} else if (!newPasswordConfirmation) {
 				invalidate(
 					confirmNewPasswordInput,
-					"You must confirm your new password.",
+					t("must-confirm-new-password", "You must confirm your new password."),
 				);
 			} else if (newPassword !== newPasswordConfirmation) {
-				invalidate(confirmNewPasswordInput, "Both passwords should match.");
+				invalidate(
+					confirmNewPasswordInput,
+					t("passwords-do-not-match", "Both passwords should match."),
+				);
 			}
 		}
 
@@ -207,14 +225,17 @@ document.body.addEventListener("keyup", (event) => {
 });
 
 document.body.addEventListener("click", (event) => {
-	if (event.target === backlogAddButton) {
-		if (addInputWrapper.classList.contains("d-none")) {
+	if (
+		backlogAddButton &&
+		event.target.closest("#backlog-task-add-button") === backlogAddButton
+	) {
+		if (addInputWrapper.classList?.contains("d-none")) {
 			addInputWrapper.classList.remove("d-none");
 		}
 		addInput.focus();
 		backlogAddButton.classList.add("d-none");
 		backlogSubmitButton.classList.remove("d-none");
-	} else if (event.target.matches(".task-add-button")) {
+	} else if (event.target.closest(".task-add-button")) {
 		// Populate the select with valid options
 		const sourceCategory = taskCategoryRelationships.get(
 			event.target.closest(".task-group").dataset.group,
@@ -224,7 +245,9 @@ document.body.addEventListener("click", (event) => {
 				appState.currentUser.canReadTask(task) &&
 				task.category === sourceCategory,
 		);
-		const select = event.target.previousElementSibling;
+		const select = event.target
+			.closest(".task-group-controls")
+			.querySelector(".card-select");
 		function createOption(value, content, disabled = false, selected = false) {
 			const option = document.createElement("option");
 			option.value = value;
@@ -233,7 +256,9 @@ document.body.addEventListener("click", (event) => {
 			if (selected) option.selected = "selected";
 			return option;
 		}
-		const options = [createOption("", "Select a task...", true, true)];
+		const options = [
+			createOption("", t("select-a-task", "Select a task..."), true, true),
+		];
 		for (const task of sourceTasks) {
 			options.push(createOption(task.id, task.title));
 		}
@@ -241,7 +266,7 @@ document.body.addEventListener("click", (event) => {
 		select.innerHTML = "";
 		select.append(...options);
 		select.classList.remove("d-none");
-		event.target.classList.add("d-none");
+		event.target.closest(".task-add-button").classList.add("d-none");
 	} else if (
 		event.target !== addInput &&
 		!addInputWrapper?.classList.contains("d-none") &&
@@ -289,7 +314,9 @@ document.body.addEventListener("click", (event) => {
 					break;
 				}
 				default: {
-					alert(`Unknown action ${action}`);
+					alert(
+						`${t("something-went-wrong", "Something went wrong")}: unknown action ${action}`,
+					);
 					break;
 				}
 			}
@@ -306,7 +333,7 @@ document.body.addEventListener("click", (event) => {
 	let taskElement;
 	if ((taskElement = event.target.closest(".task"))) {
 		showEditPopup(
-			taskElement.textContent,
+			taskElement.querySelector(".task-title").textContent,
 			taskElement.dataset.description,
 			taskElement.dataset.id,
 		);
@@ -329,14 +356,21 @@ document.body.addEventListener("click", (event) => {
 			const sharedConfig = {
 				showCancelButton: true,
 				inputValidator: (value) => {
-					if (!value) return `The new ${role}'s login cannot be empty.`;
+					if (!value)
+						return t(
+							"new-login-required",
+							`The new ${role}'s login cannot be empty.`,
+							{ role },
+						);
 				},
 			};
 
 			const loginPromptResult = await swal.fire({
-				titleText: `Enter the new ${role}'s login`,
+				titleText: t("enter-new-login", `Enter the new ${role}'s login`, {
+					role,
+				}),
 				input: "text",
-				inputLabel: `Enter login:`,
+				inputLabel: t("enter-login", "Enter login:"),
 				...sharedConfig,
 			});
 			if (loginPromptResult.isDismissed) {
@@ -344,9 +378,15 @@ document.body.addEventListener("click", (event) => {
 			}
 
 			const passwordPromptResult = await swal.fire({
-				titleText: `Enter ${loginPromptResult.value}'s password`,
+				titleText: t(
+					"enter-user-password",
+					`Enter ${loginPromptResult.value}'s password`,
+					{
+						login: loginPromptResult.value,
+					},
+				),
 				input: "password",
-				inputLabel: `Enter password:`,
+				inputLabel: t("enter-password", "Enter password:"),
 				...sharedConfig,
 			});
 			if (passwordPromptResult.isDismissed) {
@@ -370,22 +410,22 @@ document.body.addEventListener("click", (event) => {
 				if (userId === appState.currentUser.id) userDeletingThemselves = true;
 
 				const listItem = event.target.closest(".user-list-item");
-				const userRole = listItem.dataset.role;
 				const userLogin =
 					listItem.querySelector(".user-list-login").textContent;
+				const userRole = listItem.dataset.role;
 
 				const userPresentation = userDeletingThemselves
-					? "<b>yourself</b>"
-					: `the ${userRole} '${userLogin}'`;
+					? `<b>${t("yourself", "yourself")}</b>`
+					: `${t("the", "the")} ${t(`${userRole}-ya`, userRole)} "${userLogin}"`;
 				swal
 					.fire({
-						title: "Confirm deletion",
+						title: t("confirm-deletion", "Confirm deletion"),
 						[userDeletingThemselves ? "html" : "text"]:
-							`Are you really sure you want to delete ${userPresentation}?`,
+							`${t("sure-you-want-to-delete", "Are you really sure you want to delete")} ${userPresentation}?`,
 						icon: "question",
 						showDenyButton: true,
-						confirmButtonText: "Delete",
-						denyButtonText: "No, keep",
+						confirmButtonText: t("delete-confirmation", "Delete"),
+						denyButtonText: t("delete-cancel", "No, keep"),
 						reverseButtons: true,
 					})
 					.then((result) => {
@@ -407,7 +447,9 @@ document.body.addEventListener("click", (event) => {
 				break;
 			}
 			default: {
-				alert(`Unknown action ${manageUsersAction}!`);
+				alert(
+					`${t("something-went-wrong", "Something went wrong")}: unknown action ${manageUsersAction}!`,
+				);
 				break;
 			}
 		}
@@ -416,12 +458,15 @@ document.body.addEventListener("click", (event) => {
 
 document.body.addEventListener("change", (event) => {
 	let select;
-	if ((select = event.target.closest("select"))) {
+	if ((select = event.target.closest(".card-select"))) {
 		const taskId = select.value;
 		if (!appState.currentUser.canReadTask(Task.get(taskId))) {
 			swal.fire({
-				title: "Error",
-				titleText: "You can't move a task you can't see.",
+				title: t("erorr", "Error"),
+				titleText: t(
+					"can't-see-can't-move",
+					"You can't move a task you can't see.",
+				),
 				icon: "error",
 			});
 			return;
@@ -524,8 +569,8 @@ function handlePopupAction(popup, action) {
 		case "save":
 			if (!title) {
 				swal.fire({
-					title: "Error",
-					text: "Task title cannot be empty!",
+					title: t("error", "Error"),
+					text: t("title-can't-be-empty", "Task title cannot be empty!"),
 					icon: "error",
 				});
 			} else {
@@ -537,10 +582,10 @@ function handlePopupAction(popup, action) {
 		case "delete":
 			swal
 				.fire({
-					titleText: `Are you sure you want to delete "${title}"?`,
+					titleText: `${t("sure-you-want-to-delete", "Are you sure you want to delete")} "${title}"?`,
 					showDenyButton: true,
-					confirmButtonText: "Delete",
-					denyButtonText: "No, keep it",
+					confirmButtonText: t("delete-confirmation", "Delete"),
+					denyButtonText: t("delete-cancel", "No, keep it"),
 					reverseButtons: true,
 					customClass: {
 						confirmButton: "btn btn-danger",
@@ -556,7 +601,9 @@ function handlePopupAction(popup, action) {
 				});
 			break;
 		default:
-			alert(`Unknown popup action ${action}!`);
+			alert(
+				`${t("something-went-wrong", "Something went wrong")}: unknown popup action ${action}!`,
+			);
 	}
 }
 
@@ -602,7 +649,10 @@ export function renderTasks(tasks = appState.tasks) {
 	for (const task of accessibleTasks) {
 		const listItem = document.createElement("li");
 		listItem.classList.add("task");
-		listItem.textContent = task.title;
+		const taskTitleSpan = document.createElement("span");
+		taskTitleSpan.classList.add("task-title");
+		taskTitleSpan.textContent = task.title;
+		listItem.append(taskTitleSpan);
 		listItem.dataset.description = task.description;
 		listItem.dataset.id = task.id;
 		listItem.setAttribute("draggable", "true");

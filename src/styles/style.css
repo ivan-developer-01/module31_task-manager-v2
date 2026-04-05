@@ -98,6 +98,7 @@
 
 .main {
 	padding-top: 20px;
+	margin-bottom: 60px;
 	overflow: auto;
 }
 
@@ -125,6 +126,12 @@
 .tasks-counter {
 	display: flex;
 	gap: 30px;
+}
+
+.footer-right-part {
+	display: flex;
+	gap: 10px;
+	align-items: center;
 }
 
 .author-link {

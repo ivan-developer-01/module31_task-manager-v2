@@ -1,6 +1,7 @@
 const path = require("path");
 const HTMLPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
 	entry: "./src/app.js",
@@ -16,6 +17,14 @@ module.exports = {
 			template: "./src/index.html",
 		}),
 		new CleanWebpackPlugin(),
+		new CopyPlugin({
+			patterns: [
+				{
+					from: "src/locales",
+					to: "locales",
+				},
+			],
+		}),
 	],
 	module: {
 		rules: [
@@ -36,4 +45,5 @@ module.exports = {
 			},
 		],
 	},
+	experiments: { topLevelAwait: true },
 };

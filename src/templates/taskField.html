@@ -1,51 +1,39 @@
 <div class="task-groups">
 	<div class="task-group" data-group="backlog">
-		<h3 class="task-group-title">Backlog</h3>
-		<ul class="task-list">
-			<li class="task">Test something</li>
-			<li class="task">Test something another</li>
-		</ul>
+		<h3 class="task-group-title" data-i18n="backlog">Backlog</h3>
+		<ul class="task-list"></ul>
 		<div class="task-group-controls">
 			<div class="add-input-wrapper d-none">
 				<input type="text" class="add-input">
 			</div>
-			<button class="task-add-button" id="backlog-task-add-button">&#xFF0B; Add card</button>
-			<button class="task-submit-button d-none">Submit</button>
+			<button class="task-add-button" id="backlog-task-add-button">&#xFF0B; <span data-i18n="add-card">Add card</span></button>
+			<button class="task-submit-button d-none" data-i18n="submit">Submit</button>
 		</div>
 	</div>
 	<div class="task-group" data-group="ready">
-		<h3 class="task-group-title">Ready</h3>
-		<ul class="task-list">
-			<li class="task">Ready task 1</li>
-			<li class="task">Ready task 2</li>
-		</ul>
+		<h3 class="task-group-title" data-i18n="ready">Ready</h3>
+		<ul class="task-list"></ul>
 		<div class="task-group-controls">
 			<select id="ready-task-select" class="card-select d-none">
 				<!-- Populated via JS -->
 			</select>
-			<button class="task-add-button">&#xFF0B; Add card</button>
+			<button class="task-add-button">&#xFF0B; <span data-i18n="add-card">Add card</span></button>
 		</div>
 	</div>
 	<div class="task-group" data-group="in-progress">
-		<h3 class="task-group-title">In Progress</h3>
-		<ul class="task-list">
-			<li class="task">In progress task 1</li>
-			<li class="task">In progress task 2</li>
-			<li class="task">In progress task 3</li>
-		</ul>
+		<h3 class="task-group-title" data-i18n="in-progress">In Progress</h3>
+		<ul class="task-list"></ul>
 		<div class="task-group-controls">
-			<select id="ready-task-select" class="card-select d-none"></select>
-			<button class="task-add-button">&#xFF0B; Add card</button>
+			<select id="in-progress-task-select" class="card-select d-none"></select>
+			<button class="task-add-button">&#xFF0B; <span data-i18n="add-card">Add card</span></button>
 		</div>
 	</div>
 	<div class="task-group" data-group="finished">
-		<h3 class="task-group-title">Finished</h3>
-		<ul class="task-list">
-			<li class="task">Lone finished task</li>
-		</ul>
+		<h3 class="task-group-title" data-i18n="finished">Finished</h3>
+		<ul class="task-list"></ul>
 		<div class="task-group-controls">
-			<select id="ready-task-select" class="card-select d-none"></select>
-			<button class="task-add-button">&#xFF0B; Add card</button>
+			<select id="finished-task-select" class="card-select d-none"></select>
+			<button class="task-add-button">&#xFF0B; <span data-i18n="add-card">Add card</span></button>
 		</div>
 	</div>
 </div>
@@ -67,9 +55,9 @@
 			</div>
 			<div class="popup-footer">
 				<div class="btn-group">
-					<button type="button" class="btn btn-primary popup-button" data-action="save">Save</button>
-					<button type="button" class="btn btn-danger popup-button" data-action="delete">Delete</button>
-					<button type="button" class="btn btn-secondary popup-button" data-action="cancel">Cancel</button>
+					<button type="button" class="btn btn-primary popup-button" data-action="save" data-i18n="save">Save</button>
+					<button type="button" class="btn btn-danger popup-button" data-action="delete" data-i18n="delete">Delete</button>
+					<button type="button" class="btn btn-secondary popup-button" data-action="cancel" data-i18n="cancel">Cancel</button>
 				</div>
 			</div>
 		</div>
